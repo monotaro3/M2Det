@@ -27,8 +27,10 @@ class COCODetection(data.Dataset):
     def __init__(self, root, image_sets, preproc=None, target_transform=None,
                  dataset_name='COCO'):
         self.root = root
-        self.data_path = os.path.join(os.path.expanduser("~"),'data')
-        self.cache_path = os.path.join(self.data_path, 'coco_cache')
+        # self.data_path = os.path.join(os.path.expanduser("~"),'data')
+        self.data_path = os.path.join(os.path.expanduser(""), 'data')
+        # self.cache_path = os.path.join(self.data_path, 'coco_cache')
+        self.cache_path = os.path.join(self.data_path, 'coco')
         self.image_set = image_sets
         self.preproc = preproc
         self.target_transform = target_transform
