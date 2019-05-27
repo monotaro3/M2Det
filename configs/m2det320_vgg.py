@@ -72,6 +72,7 @@ dataset = dict(
     )
 
 import os
-home = os.path.expanduser("~")
+# home = os.path.expanduser("~")
+home = ""
 VOCroot = os.path.join(home,"data/VOCdevkit/")
 COCOroot = os.path.join(home,"data/coco/")
