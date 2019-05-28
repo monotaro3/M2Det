@@ -20,8 +20,18 @@ parser.add_argument('-c', '--config', default='configs/m2det320_vgg16.py')
 parser.add_argument('-d', '--dataset', default='COCO', help='VOC or COCO dataset')
 parser.add_argument('--ngpu', default=1, type=int, help='gpus')
 parser.add_argument('--resume_net', default=None, help='resume net for retraining')
+parser.add_argument('--resume_iter', default=0, type=int, help='resume iter for retraining')
 parser.add_argument('--resume_epoch', default=0, type=int, help='resume iter for retraining')
+parser.add_argument('--snapshot_interval_iter', default=1000, type=int, help='snapshot interval iter for retraining')
 parser.add_argument('-t', '--tensorboard', type=bool, default=False, help='Use tensorborad to show the Loss Graph')
+
+parser.add_argument('--backup_to_server', action='store_true')
+parser.add_argument('--backup_server', default='34.73.8.208')
+parser.add_argument('--backup_server_user', default='yoheikoga')
+parser.add_argument('--ssh_key')
+parser.add_argument('--backup_dir')
+parser.add_argument('--backup_dir_base', default="data")
+
 args = parser.parse_args()
 
 print_info('----------------------------------------------------------------------\n'
@@ -61,8 +71,10 @@ if __name__ == '__main__':
     stepvalues = [_*epoch_size for _ in getattr(cfg.train_cfg.step_lr, args.dataset)[:-1]]
     print_info('===> Training M2Det on ' + args.dataset, ['yellow','bold'])
     step_index = 0
-    if args.resume_epoch > 0:
-        start_iter = args.resume_epoch * epoch_size
+    # if args.resume_epoch > 0:
+    #     start_iter = args.resume_epoch * epoch_size
+    if args.resume_iter > 0:
+        start_iter = args.resume_iter
     else:
         start_iter = 0
     for iteration in range(start_iter, max_iter):
@@ -72,9 +84,16 @@ if __name__ == '__main__':
                                                   shuffle=True, 
                                                   num_workers=cfg.train_cfg.num_workers, 
                                                   collate_fn=detection_collate))
-            if epoch % cfg.model.save_eposhs == 0:
-                save_checkpoint(net, cfg, final=False, datasetname = args.dataset, epoch=epoch)
+            # if epoch % cfg.model.save_eposhs == 0:
+            #     save_checkpoint(net, cfg, final=False, datasetname = args.dataset, epoch=epoch)
             epoch += 1
+            print("Current epoch: {}".format(epoch))
+        if iteration % args.snapshot_interval_iter == 0:
+            save_checkpoint(net, cfg, final=False, datasetname=args.dataset, iter=iteration)
+            if args.backup_to_server:
+                os.system("rsync -P -r -e 'ssh -i "+args.ssh_key+" -o StrictHostKeyChecking=no' " + cfg.model.weights_save + \
+                   'M2Det_{}_size{}_net{}_iter{}.pth'.format(args.dataset, cfg.model.input_size,
+                                                              cfg.model.m2det_config.backbone, iteration) + " "+args.backup_server_user+"@" + args.backup_server + ":"+os.path.join(args.backup_dir_base,args.backup_dir))
         load_t0 = time.time()
         if iteration in stepvalues:
             step_index += 1
@@ -96,3 +115,8 @@ if __name__ == '__main__':
         print_train_log(iteration, cfg.train_cfg.print_epochs,
                             [time.ctime(),epoch,iteration%epoch_size,epoch_size,iteration,loss_l.item(),loss_c.item(),load_t1-load_t0,lr])
     save_checkpoint(net, cfg, final=True, datasetname=args.dataset,epoch=-1)
+    if args.backup_to_server:
+        os.system("rsync -P -r -e 'ssh -i " + args.ssh_key + " -o StrictHostKeyChecking=no' " + cfg.model.weights_save + \
+                  'Final_M2Det_{}_size{}_net{}.pth'.format(args.dataset, cfg.model.input_size,
+                                                            cfg.model.m2det_config.backbone) + " " + args.backup_server_user + "@" + args.backup_server + ":" + os.path.join(
+            args.backup_dir_base, args.backup_dir))
