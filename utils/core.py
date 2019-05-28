@@ -111,13 +111,16 @@ def print_info(info, _type=None):
         print(info)
 
 
-def save_checkpoint(net, cfg, final=True, datasetname='COCO',epoch=10):
+def save_checkpoint(net, cfg, final=True, datasetname='COCO',epoch=10,iter = 1000):
     if final:
         torch.save(net.state_dict(), cfg.model.weights_save + \
                 'Final_M2Det_{}_size{}_net{}.pth'.format(datasetname, cfg.model.input_size, cfg.model.m2det_config.backbone))
     else:
+        # torch.save(net.state_dict(), cfg.model.weights_save + \
+        #         'M2Det_{}_size{}_net{}_epoch{}.pth'.format(datasetname, cfg.model.input_size, cfg.model.m2det_config.backbone,epoch))
         torch.save(net.state_dict(), cfg.model.weights_save + \
-                'M2Det_{}_size{}_net{}_epoch{}.pth'.format(datasetname, cfg.model.input_size, cfg.model.m2det_config.backbone,epoch))
+                   'M2Det_{}_size{}_net{}_iter{}.pth'.format(datasetname, cfg.model.input_size,
+                                                              cfg.model.m2det_config.backbone, iter))
 
 
 
