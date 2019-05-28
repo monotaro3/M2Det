@@ -91,9 +91,11 @@ if __name__ == '__main__':
         if iteration % args.snapshot_interval_iter == 0:
             save_checkpoint(net, cfg, final=False, datasetname=args.dataset, iter=iteration)
             if args.backup_to_server:
-                os.system("rsync -P -r -e 'ssh -i "+args.ssh_key+" -o StrictHostKeyChecking=no' " + cfg.model.weights_save + \
+                snapshot_path = cfg.model.weights_save + \
                    'M2Det_{}_size{}_net{}_iter{}.pth'.format(args.dataset, cfg.model.input_size,
-                                                              cfg.model.m2det_config.backbone, iteration) + " "+args.backup_server_user+"@" + args.backup_server + ":"+os.path.join(args.backup_dir_base,args.backup_dir))
+                                                              cfg.model.m2det_config.backbone, iteration)
+                os.system("rsync -P -r -e 'ssh -i "+args.ssh_key+" -o StrictHostKeyChecking=no' " + \
+                   snapshot_path + " "+args.backup_server_user+"@" + args.backup_server + ":"+os.path.join(args.backup_dir_base,args.backup_dir,snapshot_path))
         load_t0 = time.time()
         if iteration in stepvalues:
             step_index += 1
