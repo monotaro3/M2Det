@@ -76,6 +76,11 @@ if __name__ == '__main__':
     #     start_iter = args.resume_epoch * epoch_size
     if args.resume_iter > 0:
         start_iter = args.resume_iter
+        batch_iterator = iter(data.DataLoader(dataset,
+                                              cfg.train_cfg.per_batch_size * args.ngpu,
+                                              shuffle=True,
+                                              num_workers=cfg.train_cfg.num_workers,
+                                              collate_fn=detection_collate))
     else:
         start_iter = 0
     for iteration in range(start_iter, max_iter):
