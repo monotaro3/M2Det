@@ -31,6 +31,7 @@ parser.add_argument('--backup_server_user', default='yoheikoga')
 parser.add_argument('--ssh_key')
 parser.add_argument('--backup_dir')
 parser.add_argument('--backup_dir_base', default="data")
+parser.add_argument('--snapshot_stock', type = int, default=5)
 
 args = parser.parse_args()
 
@@ -91,11 +92,17 @@ if __name__ == '__main__':
         if iteration % args.snapshot_interval_iter == 0:
             save_checkpoint(net, cfg, final=False, datasetname=args.dataset, iter=iteration)
             if args.backup_to_server:
-                snapshot_path = cfg.model.weights_save + \
+                # snapshot_path = cfg.model.weights_save + \
+                #    'M2Det_{}_size{}_net{}_iter{}.pth'.format(args.dataset, cfg.model.input_size,
+                #                                               cfg.model.m2det_config.backbone, iteration)
+                os.system("rsync -P -r -e 'ssh -i "+args.ssh_key+" -o StrictHostKeyChecking=no' --include 'M2Det*' --exclude '*' " + \
+                          cfg.model.weights_save + " "+args.backup_server_user+"@" + args.backup_server + ":"+os.path.join(args.backup_dir_base,args.backup_dir))
+                # import os
+                snapshot_path_past = cfg.model.weights_save + \
                    'M2Det_{}_size{}_net{}_iter{}.pth'.format(args.dataset, cfg.model.input_size,
-                                                              cfg.model.m2det_config.backbone, iteration)
-                os.system("rsync -P -r -e 'ssh -i "+args.ssh_key+" -o StrictHostKeyChecking=no' " + \
-                   snapshot_path + " "+args.backup_server_user+"@" + args.backup_server + ":"+os.path.join(args.backup_dir_base,args.backup_dir,snapshot_path))
+                                                              cfg.model.m2det_config.backbone, iteration-args.snapshot_interval_iter*(args.snapshot_stock-1))
+                if os.path.isfile(snapshot_path_past):
+                    os.remove(snapshot_path_past)
         load_t0 = time.time()
         if iteration in stepvalues:
             step_index += 1
