@@ -81,6 +81,7 @@ if __name__ == '__main__':
                                               shuffle=True,
                                               num_workers=cfg.train_cfg.num_workers,
                                               collate_fn=detection_collate))
+        epoch = args.resume_iter // epoch_size
     else:
         start_iter = 0
     for iteration in range(start_iter, max_iter):
