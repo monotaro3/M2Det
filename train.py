@@ -100,9 +100,11 @@ if __name__ == '__main__':
             if args.backup_to_server:
                 # snapshot_path = cfg.model.weights_save + \
                 #    'M2Det_{}_size{}_net{}_iter{}.pth'.format(args.dataset, cfg.model.input_size,
-                #                                               cfg.model.m2det_config.backbone, iteration)
-                os.system("rsync --delete -P -r -e 'ssh -i "+args.ssh_key+" -o StrictHostKeyChecking=no' --include 'M2Det*' --exclude '*' " + \
-                          cfg.model.weights_save + " "+args.backup_server_user+"@" + args.backup_server + ":"+os.path.join(args.backup_dir_base,args.backup_dir))
+                #
+                #                          cfg.model.m2det_config.backbone, iteration)
+                if iteration > args.resume_iter:
+                    os.system("rsync --delete -P -r -e 'ssh -i "+args.ssh_key+" -o StrictHostKeyChecking=no' --include 'M2Det*' --exclude '*' " + \
+                              cfg.model.weights_save + " "+args.backup_server_user+"@" + args.backup_server + ":"+os.path.join(args.backup_dir_base,args.backup_dir))
                 # import os
                 snapshot_path_past = cfg.model.weights_save + \
                    'M2Det_{}_size{}_net{}_iter{}.pth'.format(args.dataset, cfg.model.input_size,
