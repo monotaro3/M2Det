@@ -22,7 +22,7 @@ parser.add_argument('--ngpu', default=1, type=int, help='gpus')
 parser.add_argument('--resume_net', default=None, help='resume net for retraining')
 parser.add_argument('--resume_iter', default=0, type=int, help='resume iter for retraining')
 parser.add_argument('--resume_epoch', default=0, type=int, help='resume iter for retraining')
-parser.add_argument('--snapshot_interval_iter', default=1000, type=int, help='snapshot interval iter for retraining')
+parser.add_argument('--snapshot_interval_iter', type=int, help='snapshot interval iter for retraining')
 parser.add_argument('-t', '--tensorboard', type=bool, default=False, help='Use tensorborad to show the Loss Graph')
 
 parser.add_argument('--backup_to_server', action='store_true')
@@ -72,9 +72,17 @@ if __name__ == '__main__':
     stepvalues = [_*epoch_size for _ in getattr(cfg.train_cfg.step_lr, args.dataset)[:-1]]
     print_info('===> Training M2Det on ' + args.dataset, ['yellow','bold'])
     step_index = 0
-    # if args.resume_epoch > 0:
-    #     start_iter = args.resume_epoch * epoch_size
-    if args.resume_iter > 0:
+    trigger_iter = False
+
+    if args.snapshot_interval_iter:
+        snapshot_interval_iter = args.snapshot_interval_iter
+        trigger_iter = True
+    else:
+        snapshot_interval_iter = epoch_size
+
+    if args.resume_epoch > 0:
+        start_iter = args.resume_epoch * epoch_size
+    elif args.resume_iter > 0:
         start_iter = args.resume_iter
         batch_iterator = iter(data.DataLoader(dataset,
                                               cfg.train_cfg.per_batch_size * args.ngpu,
@@ -82,8 +90,10 @@ if __name__ == '__main__':
                                               num_workers=cfg.train_cfg.num_workers,
                                               collate_fn=detection_collate))
         epoch = args.resume_iter // epoch_size
+        trigger_iter = True
     else:
         start_iter = 0
+
     for iteration in range(start_iter, max_iter):
         if iteration % epoch_size == 0:
             batch_iterator = iter(data.DataLoader(dataset, 
@@ -91,24 +101,31 @@ if __name__ == '__main__':
                                                   shuffle=True, 
                                                   num_workers=cfg.train_cfg.num_workers, 
                                                   collate_fn=detection_collate))
-            # if epoch % cfg.model.save_eposhs == 0:
-            #     save_checkpoint(net, cfg, final=False, datasetname = args.dataset, epoch=epoch)
+            # if epoch % cfg.model.save_eposhs == 0 and not trigger_iter:
+            #     save_checkpoint(net, cfg, final=False, datasetname = args.dataset, epoch=epoch, trigger_iter = trigger_iter)
             epoch += 1
             print("Current epoch: {}".format(epoch))
-        if iteration % args.snapshot_interval_iter == 0:
-            save_checkpoint(net, cfg, final=False, datasetname=args.dataset, iter=iteration)
+        if iteration % snapshot_interval_iter == 0:
+            save_checkpoint(net, cfg, final=False, datasetname=args.dataset, epoch = epoch-1, iter=iteration, trigger_iter = trigger_iter)
             if args.backup_to_server:
                 # snapshot_path = cfg.model.weights_save + \
                 #    'M2Det_{}_size{}_net{}_iter{}.pth'.format(args.dataset, cfg.model.input_size,
                 #
                 #                          cfg.model.m2det_config.backbone, iteration)
-                if iteration > args.resume_iter:
+                if (trigger_iter and iteration > args.resume_iter) or (not trigger_iter and epoch > args.resume_epoch):
                     os.system("rsync --delete -P -r -e 'ssh -i "+args.ssh_key+" -o StrictHostKeyChecking=no' --include 'M2Det*' --exclude '*' " + \
                               cfg.model.weights_save + " "+args.backup_server_user+"@" + args.backup_server + ":"+os.path.join(args.backup_dir_base,args.backup_dir))
                 # import os
-                snapshot_path_past = cfg.model.weights_save + \
-                   'M2Det_{}_size{}_net{}_iter{}.pth'.format(args.dataset, cfg.model.input_size,
-                                                              cfg.model.m2det_config.backbone, iteration-args.snapshot_interval_iter*(args.snapshot_stock-1))
+                if trigger_iter:
+                    snapshot_path_past = cfg.model.weights_save + \
+                       'M2Det_{}_size{}_net{}_iter{}.pth'.format(args.dataset, cfg.model.input_size,
+                                                                  cfg.model.m2det_config.backbone, iteration-args.snapshot_interval_iter*(args.snapshot_stock-1))
+                else:
+                    snapshot_path_past = cfg.model.weights_save + \
+                                         'M2Det_{}_size{}_net{}_epoch{}.pth'.format(args.dataset, cfg.model.input_size,
+                                                                                   cfg.model.m2det_config.backbone,
+                                                                                   epoch - cfg.model.save_eposhs * (
+                                                                                   args.snapshot_stock - 1))
                 if os.path.isfile(snapshot_path_past):
                     os.remove(snapshot_path_past)
         load_t0 = time.time()
