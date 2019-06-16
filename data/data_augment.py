@@ -162,10 +162,11 @@ def preproc_for_test(image, insize, mean):
 
 class preproc(object):
 
-    def __init__(self, resize, rgb_means, p):
+    def __init__(self, resize, rgb_means, p, aug_do = False):
         self.means = rgb_means
         self.resize = resize
         self.p = p
+        self.aug_do = aug_do
 
     def __call__(self, image, targets):
         boxes = targets[:,:-1].copy()
@@ -186,11 +187,17 @@ class preproc(object):
         labels_o = np.expand_dims(labels_o,1)
         targets_o = np.hstack((boxes_o,labels_o))
 
-        image_t, boxes, labels = _crop(image, boxes, labels)
+        if self.aug_do:
+            image_t, boxes, labels = _crop(image, boxes, labels)
+
+            image_t, boxes = _expand(image_t, boxes, self.means, self.p)
+            image_t, boxes = _mirror(image_t, boxes)
+            #image_t, boxes = _mirror(image, boxes)
+        else:
+            image_t = image.copy()
+
         image_t = _distort(image_t)
-        image_t, boxes = _expand(image_t, boxes, self.means, self.p)
-        image_t, boxes = _mirror(image_t, boxes)
-        #image_t, boxes = _mirror(image, boxes)
+
 
         height, width, _ = image_t.shape
         image_t = preproc_for_test(image_t, self.resize, self.means)
