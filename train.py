@@ -78,7 +78,7 @@ if __name__ == '__main__':
         snapshot_interval_iter = args.snapshot_interval_iter
         trigger_iter = True
     else:
-        snapshot_interval_iter = epoch_size
+        snapshot_interval_iter = epoch_size * cfg.model.save_eposhs
 
     if args.resume_epoch > 0:
         start_iter = args.resume_epoch * epoch_size
