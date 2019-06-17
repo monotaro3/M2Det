@@ -20,7 +20,7 @@ model = dict(
         step_pattern = [8, 16, 32, 64, 107, 320],
         size_pattern = [0.08, 0.15, 0.33, 0.51, 0.69, 0.87, 1.05],
         ),
-    save_eposhs = 10,
+    save_eposhs = 1,
     weights_save = 'weights/'
     )
 
