@@ -12,6 +12,7 @@ from m2det import build_net
 from data import BaseTransform
 from utils.core import *
 from utils.pycocotools.coco import COCO
+import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(description='M2Det Testing')
 parser.add_argument('-c', '--config', default='configs/m2det320_vgg.py', type=str)
@@ -146,13 +147,14 @@ while True:
         im2show = cv2.resize(im2show,
                              (int(1000. * float(im2show.shape[1]) / im2show.shape[0]), 1000))
     if args.show:
-        cv2.imshow('test', im2show)
-        if cam < 0:
-            cv2.waitKey(5000)
-        else:
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                cv2.destroyAllWindows()
-                capture.release()
-                break
+        # cv2.imshow('test', im2show)
+        # if cam < 0:
+        #     cv2.waitKey(5000)
+        # else:
+        #     if cv2.waitKey(1) & 0xFF == ord('q'):
+        #         cv2.destroyAllWindows()
+        #         capture.release()
+        #         break
+        plt.imshow(im2show)
     if cam < 0:
         cv2.imwrite('{}_m2det.jpg'.format(fname.split('.')[0]), im2show)
