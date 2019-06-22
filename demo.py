@@ -110,6 +110,13 @@ while True:
     boxes, scores = detector.forward(out, priors)
     boxes = (boxes[0]*scale).cpu().numpy()
     scores = scores[0].cpu().numpy()
+
+    #debug
+    print("boxes")
+    print(boxes)
+    print("scores")
+    print(scores)
+
     allboxes = []
     for j in range(1, cfg.model.m2det_config.num_classes):
         inds = np.where(scores[:,j] > cfg.test_cfg.score_threshold)[0]
