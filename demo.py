@@ -87,6 +87,7 @@ if cam >= 0:
 im_fnames = sorted((fname for fname in os.listdir(im_path) if os.path.splitext(fname)[-1] in ('.jpg','.png')))
 im_fnames = (os.path.join(im_path, fname) for fname in im_fnames)
 im_iter = iter(im_fnames)
+filenum = 0
 while True:
     if cam < 0:
         try:
@@ -146,7 +147,11 @@ while True:
     if im2show.shape[0] > 1100:
         im2show = cv2.resize(im2show,
                              (int(1000. * float(im2show.shape[1]) / im2show.shape[0]), 1000))
+    # resultdir = "result"
+    # if not os.path.isdir(resultdir):
+    #     os.makedirs(resultdir)
     if args.show:
+        # cv2.imwrite(os.path.join(resultdir,"{}.jpg".format(filenum)),im2show)
         cv2.imshow('test', im2show)
         if cam < 0:
             cv2.waitKey(5000)
@@ -155,6 +160,6 @@ while True:
                 cv2.destroyAllWindows()
                 capture.release()
                 break
-        # plt.imshow(im2show)
+        plt.imshow(im2show)
     if cam < 0:
         cv2.imwrite('{}_m2det.jpg'.format(fname.split('.')[0]), im2show)
