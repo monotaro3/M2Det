@@ -180,7 +180,7 @@ while True:
         c_scores = scores[inds, j]
 
         #debug
-        print("selected scores:{}".format(c_bboxes))
+        print("selected scores:{}".format(c_scores))
 
         c_dets = np.hstack((c_bboxes, c_scores[:, np.newaxis])).astype(np.float32, copy=False)
         soft_nms = cfg.test_cfg.soft_nms
