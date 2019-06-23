@@ -87,6 +87,10 @@ if cam >= 0:
     capture = cv2.VideoCapture(cam)
 im_fnames = sorted((fname for fname in os.listdir(im_path) if os.path.splitext(fname)[-1] in ('.jpg','.png','.tif')))
 im_fnames = (os.path.join(im_path, fname) for fname in im_fnames)
+
+#debug
+im_fnames = im_fnames[[0]]
+
 im_iter = iter(im_fnames)
 filenum = 0
 
@@ -138,11 +142,21 @@ while True:
             score = score[0].cpu().numpy()
             box[(0, 2),:] += offset_W
             box[(1, 3), :] += offset_H
+            #debug
+            print("box")
+            print(box)
+            print("score")
+            print(score)
             boxes.append(box)
             scores.append(score)
 
     boxes = np.vstack(boxes)
     scores = np.vstack(scores)
+    # debug
+    print("merged boxes")
+    print(boxes)
+    print("merged scores")
+    print(scores)
 
     # if cfg.test_cfg.cuda:
     #     img = img.cuda()
@@ -156,7 +170,7 @@ while True:
     # print("boxes")
     # print(boxes)
     # print("scores")
-    print(scores)
+    # print(scores)
 
     allboxes = []
     for j in range(1, cfg.model.m2det_config.num_classes):
