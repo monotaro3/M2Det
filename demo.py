@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 parser = argparse.ArgumentParser(description='M2Det Testing')
 parser.add_argument('-c', '--config', default='configs/m2det320_vgg.py', type=str)
 parser.add_argument('-f', '--directory', default='imgs/', help='the path to demo images')
+parser.add_argument('-r', '--result', default='result/', help='the path to result outputs')
 parser.add_argument('-m', '--trained_model', default=None, type=str, help='Trained state_dict file path to open')
 parser.add_argument('--cam', default=-1, type=int, help='camera device id')
 parser.add_argument('--show', action='store_true', help='Whether to display the images')
@@ -88,6 +89,10 @@ im_fnames = sorted((fname for fname in os.listdir(im_path) if os.path.splitext(f
 im_fnames = (os.path.join(im_path, fname) for fname in im_fnames)
 im_iter = iter(im_fnames)
 filenum = 0
+
+if not os.path.isdir(args.result):
+    os.makedirs(args.result)
+
 while True:
     if cam < 0:
         try:
@@ -103,20 +108,54 @@ while True:
             capture.release()
             break
     loop_start = time.time()
-    w,h = image.shape[1],image.shape[0]
-    img = _preprocess(image).unsqueeze(0)
-    if cfg.test_cfg.cuda:
-        img = img.cuda()
-    scale = torch.Tensor([w,h,w,h])
-    out = net(img)
-    boxes, scores = detector.forward(out, priors)
-    boxes = (boxes[0]*scale).cpu().numpy()
-    scores = scores[0].cpu().numpy()
+    W, H = image.shape[1], image.shape[0]
+    # img = _preprocess(image).unsqueeze(0)
 
-    #debug
-    print("boxes")
-    print(boxes)
-    print("scores")
+    margin = 50
+    size = cfg.model.input_size
+    import math
+
+    stride = size - margin
+    H_slot = math.ceil((H - margin) / stride)
+    W_slot = math.ceil((W - margin) / stride)
+
+    boxes =[]
+    scores = []
+
+    for h in range(H_slot):
+        offset_H = stride * h if h < H_slot-1 else H - size
+        for w in range(W_slot):
+            offset_W = stride * w if w < W_slot-1 else W - size
+            cutout = image[offset_H:offset_H + size, offset_W:offset_W + size,:]
+            w, h = cutout.shape[1], cutout.shape[0]
+            cutout = _preprocess(image).unsqueeze(0)
+            if cfg.test_cfg.cuda:
+                cutout = cutout.cuda()
+            scale = torch.Tensor([w, h, w, h])
+            out = net(cutout)
+            box, score = detector.forward(out, priors)
+            box = (box[0] * scale).cpu().numpy()
+            score = score[0].cpu().numpy()
+            box[(0, 2),:] += offset_W
+            box[(1, 3), :] += offset_H
+            boxes.append(box)
+            scores.append(score)
+
+    boxes = np.vstack(boxes)
+    scores = np.vstack(scores)
+
+    # if cfg.test_cfg.cuda:
+    #     img = img.cuda()
+    # scale = torch.Tensor([W, H, W, H])
+    # out = net(img)
+    # boxes, scores = detector.forward(out, priors)
+    # boxes = (boxes[0]*scale).cpu().numpy()
+    # scores = scores[0].cpu().numpy()
+    #
+    # #debug
+    # print("boxes")
+    # print(boxes)
+    # print("scores")
     print(scores)
 
     allboxes = []
@@ -166,4 +205,5 @@ while True:
                 break
         plt.imshow(im2show)
     if cam < 0:
-        cv2.imwrite('{}_m2det.jpg'.format(fname.split('.')[0]), im2show)
+        # cv2.imwrite('{}_m2det.jpg'.format(fname.split('.')[0]), im2show)
+        cv2.imwrite(os.path.join(args.result,'{}_m2det.jpg'.format(os.path.splitext(os.path.split(fname)[1])[0])), im2show)
