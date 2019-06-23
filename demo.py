@@ -153,8 +153,8 @@ while True:
                 box, score = detector.forward(out, priors)
                 box = (box[0] * scale).cpu().numpy()
                 score = score[0].cpu().numpy()
-                # box[:,(0, 2)] += offset_W
-                # box[:,(1, 3)] += offset_H
+                box[:,(0, 2)] += offset_W
+                box[:,(1, 3)] += offset_H
                 #debug
                 print("box")
                 print("shape:{}".format(box.shape))
