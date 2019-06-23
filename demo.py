@@ -156,7 +156,7 @@ while True:
                 cutout_num += 1
                 cv2.imwrite(
                     os.path.join(args.result, '{}_cutout_{}.jpg'.format(os.path.splitext(os.path.split(fname)[1])[0],cutout_num)),
-                    im2show)
+                    cutout)
                 w_c, h_c = cutout.shape[1], cutout.shape[0]
                 # debug
                 print('W_c,H_c:{}'.format((w_c, h_c)))
