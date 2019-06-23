@@ -177,11 +177,11 @@ while True:
         if len(inds) == 0:
             continue
         c_bboxes = boxes[inds]
+        c_scores = scores[inds, j]
 
         #debug
-        print("selected boxes:{}".format(c_bboxes))
+        print("selected scores:{}".format(c_bboxes))
 
-        c_scores = scores[inds, j]
         c_dets = np.hstack((c_bboxes, c_scores[:, np.newaxis])).astype(np.float32, copy=False)
         soft_nms = cfg.test_cfg.soft_nms
         keep = nms(c_dets, cfg.test_cfg.iou, force_cpu = soft_nms) #min_thresh, device_id=0 if cfg.test_cfg.cuda else None)
