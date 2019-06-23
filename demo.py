@@ -190,8 +190,8 @@ while True:
                 score = allboxes[:, 4]
                 cls_ind = allboxes[:, 5]
 
-                box[:,(0, 2)] += offset_W
-                box[:,(1, 3)] += offset_H
+                # box[:,(0, 2)] += offset_W
+                # box[:,(1, 3)] += offset_H
 
                 #debug
                 print("box")
