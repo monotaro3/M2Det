@@ -89,13 +89,9 @@ if cam >= 0:
     capture = cv2.VideoCapture(cam)
 im_fnames = sorted((fname for fname in os.listdir(im_path) if os.path.splitext(fname)[-1] in ('.jpg','.png','.tif')))
 
-# #debug
-# im_fnames = [im_fnames[0]]
-
 im_fnames = (os.path.join(im_path, fname) for fname in im_fnames)
 
 im_iter = iter(im_fnames)
-# filenum = 0
 
 if not os.path.isdir(args.result):
     os.makedirs(args.result)
@@ -116,9 +112,6 @@ while True:
             break
     loop_start = time.time()
     W, H = image.shape[1], image.shape[0]
-    #debug
-    print("original image:{}\nshape:{}".format(fname,image.shape))
-
 
     if not args.split:
         img = _preprocess(image).unsqueeze(0)
@@ -132,35 +125,16 @@ while True:
         H_slot = math.ceil((H - margin) / stride)
         W_slot = math.ceil((W - margin) / stride)
 
-        #debug
-        # H_slot = 1
-        # W_slot = 1
-
-        #debug
-        print('W,H:{}'.format((W,H)))
-
         boxes =[]
         scores = []
         cls_inds = []
-
-        #debug
-        # cutout_num = 0
 
         for h in range(H_slot):
             offset_H = stride * h if h < H_slot-1 else H - size
             for w in range(W_slot):
                 offset_W = stride * w if w < W_slot-1 else W - size
-                #debug
-                print("offset w, h :{}".format((offset_W,offset_H)))
                 cutout = image[offset_H:offset_H + size, offset_W:offset_W + size,:]
-                #debug
-                # cutout_num += 1
-                # cv2.imwrite(
-                #     os.path.join(args.result, '{}_cutout_{}.jpg'.format(os.path.splitext(os.path.split(fname)[1])[0],cutout_num)),
-                #     cutout)
                 w_c, h_c = cutout.shape[1], cutout.shape[0]
-                # debug
-                print('W_c,H_c:{}'.format((w_c, h_c)))
                 cutout = _preprocess(cutout).unsqueeze(0)
                 if cfg.test_cfg.cuda:
                     cutout = cutout.cuda()
@@ -170,46 +144,14 @@ while True:
                 box = (box[0] * scale).cpu().numpy()
                 score = score[0].cpu().numpy()
 
-                # allboxes = []
-                # for j in range(1, cfg.model.m2det_config.num_classes):
-                #     inds = np.where(score[:, j] > cfg.test_cfg.score_threshold)[0]
-                #     if len(inds) == 0:
-                #         continue
-                #     c_bboxes = box[inds]
-                #     c_scores = score[inds, j]
-                #     c_dets = np.hstack((c_bboxes, c_scores[:, np.newaxis])).astype(np.float32, copy=False)
-                #     soft_nms = cfg.test_cfg.soft_nms
-                #     keep = nms(c_dets, cfg.test_cfg.iou,
-                #                force_cpu=soft_nms)  # min_thresh, device_id=0 if cfg.test_cfg.cuda else None)
-                #     keep = keep[:cfg.test_cfg.keep_per_class]
-                #     c_dets = c_dets[keep, :]
-                #     allboxes.extend([_.tolist() + [j] for _ in c_dets])
-
-                # allboxes = np.array(allboxes)
-                # box = allboxes[:, :4]
-                # score = allboxes[:, 4]
-                # cls_ind = allboxes[:, 5]
-
                 box[:,(0, 2)] += offset_W
                 box[:,(1, 3)] += offset_H
 
-                #debug
-                # print("box")
-                # print("shape:{}".format(box.shape))
-                # print("len:{}".format(len(box)))
-                # print(box)
-                # print("score")
-                # print("len:{}".format(len(score)))
-                # print("shape:{}".format(score.shape))
-                # print(score)
-
                 boxes.append(box)
                 scores.append(score)
-                # cls_inds.append(cls_ind)
 
         boxes = np.vstack(boxes)
         scores = np.vstack(scores)
-        # cls_inds = np.hstack(cls_inds)
 
     else:
         if cfg.test_cfg.cuda:
@@ -219,25 +161,7 @@ while True:
         boxes, scores = detector.forward(out, priors)
         boxes = (boxes[0]*scale).cpu().numpy()
         scores = scores[0].cpu().numpy()
-    #
-    # #debug
-    # print("boxes")
-    # print(boxes)
-    # print("scores")
-    # print(scores)
 
-    # debug
-    # print("merged boxes")
-    # print(boxes)
-    # print("shape:{}".format(boxes.shape))
-    # print("len:{}".format(len(boxes)))
-    # print("merged scores")
-    # print(scores)
-    # print("len:{}".format(len(scores)))
-    # print("shape:{}".format(scores.shape))
-
-
-    # if not args.split:
     allboxes = []
     for j in range(1, cfg.model.m2det_config.num_classes):
         inds = np.where(scores[:,j] > cfg.test_cfg.score_threshold)[0]
@@ -258,12 +182,6 @@ while True:
     cls_inds = allboxes[:,5]
 
     loop_time = time.time() - loop_start
-    #debug
-    # boxes = boxes[0:2]
-    # scores = scores[0:2]
-    # cls_inds = cls_inds[0:2]
-    print("boxes after nms:{}".format(boxes.shape))
-    print("scores after nms:{}".format(scores.shape))
 
     print('\n'.join(['pos:{}, ids:{}, score:{:.3f}'.format('(%.1f,%.1f,%.1f,%.1f)' % (o[0],o[1],o[2],o[3]) \
             ,labels[int(oo)],ooo) for o,oo,ooo in zip(boxes,cls_inds,scores)]))
@@ -274,9 +192,7 @@ while True:
     if im2show.shape[0] > 1100:
         im2show = cv2.resize(im2show,
                              (int(1000. * float(im2show.shape[1]) / im2show.shape[0]), 1000))
-    # resultdir = "result"
-    # if not os.path.isdir(resultdir):
-    #     os.makedirs(resultdir)
+
     if args.show:
         # cv2.imwrite(os.path.join(resultdir,"{}.jpg".format(filenum)),im2show)
         cv2.imshow('test', im2show)
