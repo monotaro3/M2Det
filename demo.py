@@ -117,7 +117,8 @@ while True:
     loop_start = time.time()
     W, H = image.shape[1], image.shape[0]
     #debug
-    print("original image shape:{}".format(image.shape))
+    print("original image:{}\nshape:{}".format(fname,image.shape))
+
 
     if not args.split:
         img = _preprocess(image).unsqueeze(0)
