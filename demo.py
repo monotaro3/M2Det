@@ -21,6 +21,8 @@ parser.add_argument('-r', '--result', default='result/', help='the path to resul
 parser.add_argument('-m', '--trained_model', default=None, type=str, help='Trained state_dict file path to open')
 parser.add_argument('--cam', default=-1, type=int, help='camera device id')
 parser.add_argument('--show', action='store_true', help='Whether to display the images')
+parser.add_argument('--split', action='store_true', help='whether to split the images for test')
+
 args = parser.parse_args()
 
 print_info(' ----------------------------------------------------------------------\n'
@@ -114,49 +116,68 @@ while True:
             break
     loop_start = time.time()
     W, H = image.shape[1], image.shape[0]
-    # img = _preprocess(image).unsqueeze(0)
 
-    margin = 50
-    size = cfg.model.input_size
-    import math
+    if not args.split:
+        img = _preprocess(image).unsqueeze(0)
 
-    stride = size - margin
-    H_slot = math.ceil((H - margin) / stride)
-    W_slot = math.ceil((W - margin) / stride)
+    if args.split:
+        margin = 50
+        size = cfg.model.input_size
+        import math
 
-    boxes =[]
-    scores = []
+        stride = size - margin
+        H_slot = math.ceil((H - margin) / stride)
+        W_slot = math.ceil((W - margin) / stride)
 
-    for h in range(H_slot):
-        offset_H = stride * h if h < H_slot-1 else H - size
-        for w in range(W_slot):
-            offset_W = stride * w if w < W_slot-1 else W - size
-            cutout = image[offset_H:offset_H + size, offset_W:offset_W + size,:]
-            w_c, h_c = cutout.shape[1], cutout.shape[0]
-            cutout = _preprocess(image).unsqueeze(0)
-            if cfg.test_cfg.cuda:
-                cutout = cutout.cuda()
-            scale = torch.Tensor([w_c, h_c, w_c, h_c])
-            out = net(cutout)
-            box, score = detector.forward(out, priors)
-            box = (box[0] * scale).cpu().numpy()
-            score = score[0].cpu().numpy()
-            box[(0, 2),:] += offset_W
-            box[(1, 3), :] += offset_H
-            #debug
-            print("box")
-            print("shape:{}".format(box.shape))
-            print("len:{}".format(len(box)))
-            print(box)
-            print("score")
-            print("len:{}".format(len(score)))
-            print("shape:{}".format(score.shape))
-            print(score)
-            boxes.append(box)
-            scores.append(score)
+        boxes =[]
+        scores = []
 
-    boxes = np.vstack(boxes)
-    scores = np.vstack(scores)
+        for h in range(H_slot):
+            offset_H = stride * h if h < H_slot-1 else H - size
+            for w in range(W_slot):
+                offset_W = stride * w if w < W_slot-1 else W - size
+                cutout = image[offset_H:offset_H + size, offset_W:offset_W + size,:]
+                w_c, h_c = cutout.shape[1], cutout.shape[0]
+                cutout = _preprocess(image).unsqueeze(0)
+                if cfg.test_cfg.cuda:
+                    cutout = cutout.cuda()
+                scale = torch.Tensor([w_c, h_c, w_c, h_c])
+                out = net(cutout)
+                box, score = detector.forward(out, priors)
+                box = (box[0] * scale).cpu().numpy()
+                score = score[0].cpu().numpy()
+                box[(0, 2),:] += offset_W
+                box[(1, 3), :] += offset_H
+                #debug
+                print("box")
+                print("shape:{}".format(box.shape))
+                print("len:{}".format(len(box)))
+                print(box)
+                print("score")
+                print("len:{}".format(len(score)))
+                print("shape:{}".format(score.shape))
+                print(score)
+                boxes.append(box)
+                scores.append(score)
+
+        boxes = np.vstack(boxes)
+        scores = np.vstack(scores)
+
+    else:
+        if cfg.test_cfg.cuda:
+            img = img.cuda()
+        scale = torch.Tensor([W, H, W, H])
+        out = net(img)
+        boxes, scores = detector.forward(out, priors)
+        boxes = (boxes[0]*scale).cpu().numpy()
+        scores = scores[0].cpu().numpy()
+    #
+    # #debug
+    # print("boxes")
+    # print(boxes)
+    # print("scores")
+    # print(scores)
+
     # debug
     print("merged boxes")
     print(boxes)
@@ -166,20 +187,6 @@ while True:
     print(scores)
     print("len:{}".format(len(scores)))
     print("shape:{}".format(scores.shape))
-
-    # if cfg.test_cfg.cuda:
-    #     img = img.cuda()
-    # scale = torch.Tensor([W, H, W, H])
-    # out = net(img)
-    # boxes, scores = detector.forward(out, priors)
-    # boxes = (boxes[0]*scale).cpu().numpy()
-    # scores = scores[0].cpu().numpy()
-    #
-    # #debug
-    # print("boxes")
-    # print(boxes)
-    # print("scores")
-    # print(scores)
 
     allboxes = []
     for j in range(1, cfg.model.m2det_config.num_classes):
