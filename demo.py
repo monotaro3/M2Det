@@ -142,13 +142,21 @@ while True:
         scores = []
         cls_inds = []
 
+        #debug
+        cutout_num = 0
+
         for h in range(H_slot):
             offset_H = stride * h if h < H_slot-1 else H - size
             for w in range(W_slot):
                 offset_W = stride * w if w < W_slot-1 else W - size
                 #debug
                 print("offset w, h :{}".format((offset_W,offset_H)))
-                cutout = image[offset_H:offset_H + size, offset_W:offset_W + size,:].copy()
+                cutout = image[offset_H:offset_H + size, offset_W:offset_W + size,:]
+                #debug
+                cutout_num += 1
+                cv2.imwrite(
+                    os.path.join(args.result, '{}_cutout_{}.jpg'.format(os.path.splitext(os.path.split(fname)[1])[0],cutout_num)),
+                    im2show)
                 w_c, h_c = cutout.shape[1], cutout.shape[0]
                 # debug
                 print('W_c,H_c:{}'.format((w_c, h_c)))
