@@ -164,7 +164,15 @@ while True:
 
     allboxes = []
     for j in range(1, cfg.model.m2det_config.num_classes):
+        #debug
+        print("len(scores):{}".format(len(scores)))
+        print("score threshold:{}".format(cfg.test_cfg.score_threshold))
+
         inds = np.where(scores[:,j] > cfg.test_cfg.score_threshold)[0]
+
+        # debug
+        print("len(selected scores):{}".format(len(inds)))
+
         if len(inds) == 0:
             continue
         c_bboxes = boxes[inds]
