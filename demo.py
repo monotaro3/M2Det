@@ -136,6 +136,8 @@ while True:
             offset_H = stride * h if h < H_slot-1 else H - size
             for w in range(W_slot):
                 offset_W = stride * w if w < W_slot-1 else W - size
+                #debug
+                print("offset w, h :{}".format((offset_W,offset_H)))
                 cutout = image[offset_H:offset_H + size, offset_W:offset_W + size,:]
                 w_c, h_c = cutout.shape[1], cutout.shape[0]
                 cutout = _preprocess(image).unsqueeze(0)
@@ -146,8 +148,8 @@ while True:
                 box, score = detector.forward(out, priors)
                 box = (box[0] * scale).cpu().numpy()
                 score = score[0].cpu().numpy()
-                box[:,(0, 2)] += offset_W
-                box[:,(1, 3)] += offset_H
+                # box[:,(0, 2)] += offset_W
+                # box[:,(1, 3)] += offset_H
                 #debug
                 print("box")
                 print("shape:{}".format(box.shape))
