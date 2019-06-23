@@ -134,7 +134,7 @@ while True:
 
         boxes =[]
         scores = []
-
+        cls_inds = []
 
         for h in range(H_slot):
             offset_H = stride * h if h < H_slot-1 else H - size
@@ -155,8 +155,29 @@ while True:
                 box = (box[0] * scale).cpu().numpy()
                 score = score[0].cpu().numpy()
 
+                allboxes = []
+                for j in range(1, cfg.model.m2det_config.num_classes):
+                    inds = np.where(score[:, j] > cfg.test_cfg.score_threshold)[0]
+                    if len(inds) == 0:
+                        continue
+                    c_bboxes = box[inds]
+                    c_scores = score[inds, j]
+                    c_dets = np.hstack((c_bboxes, c_scores[:, np.newaxis])).astype(np.float32, copy=False)
+                    soft_nms = cfg.test_cfg.soft_nms
+                    keep = nms(c_dets, cfg.test_cfg.iou,
+                               force_cpu=soft_nms)  # min_thresh, device_id=0 if cfg.test_cfg.cuda else None)
+                    keep = keep[:cfg.test_cfg.keep_per_class]
+                    c_dets = c_dets[keep, :]
+                    allboxes.extend([_.tolist() + [j] for _ in c_dets])
+
+                allboxes = np.array(allboxes)
+                box = allboxes[:, :4]
+                score = allboxes[:, 4]
+                cls_ind = allboxes[:, 5]
+
                 box[:,(0, 2)] += offset_W
                 box[:,(1, 3)] += offset_H
+
                 #debug
                 print("box")
                 print("shape:{}".format(box.shape))
@@ -166,11 +187,14 @@ while True:
                 print("len:{}".format(len(score)))
                 print("shape:{}".format(score.shape))
                 print(score)
+
                 boxes.append(box)
                 scores.append(score)
+                cls_inds.append(cls_ind)
 
         boxes = np.vstack(boxes)
-        scores = np.vstack(scores)
+        scores = np.hstack(scores)
+        cls_inds = np.hstack(cls_inds)
 
     else:
         if cfg.test_cfg.cuda:
@@ -197,25 +221,29 @@ while True:
     print("len:{}".format(len(scores)))
     print("shape:{}".format(scores.shape))
 
-    allboxes = []
-    for j in range(1, cfg.model.m2det_config.num_classes):
-        inds = np.where(scores[:,j] > cfg.test_cfg.score_threshold)[0]
-        if len(inds) == 0:
-            continue
-        c_bboxes = boxes[inds]
-        c_scores = scores[inds, j]
-        c_dets = np.hstack((c_bboxes, c_scores[:, np.newaxis])).astype(np.float32, copy=False)
-        soft_nms = cfg.test_cfg.soft_nms
-        keep = nms(c_dets, cfg.test_cfg.iou, force_cpu = soft_nms) #min_thresh, device_id=0 if cfg.test_cfg.cuda else None)
-        keep = keep[:cfg.test_cfg.keep_per_class]
-        c_dets = c_dets[keep, :]
-        allboxes.extend([_.tolist()+[j] for _ in c_dets])
+
+    if not args.split:
+        allboxes = []
+        for j in range(1, cfg.model.m2det_config.num_classes):
+            inds = np.where(scores[:,j] > cfg.test_cfg.score_threshold)[0]
+            if len(inds) == 0:
+                continue
+            c_bboxes = boxes[inds]
+            c_scores = scores[inds, j]
+            c_dets = np.hstack((c_bboxes, c_scores[:, np.newaxis])).astype(np.float32, copy=False)
+            soft_nms = cfg.test_cfg.soft_nms
+            keep = nms(c_dets, cfg.test_cfg.iou, force_cpu = soft_nms) #min_thresh, device_id=0 if cfg.test_cfg.cuda else None)
+            keep = keep[:cfg.test_cfg.keep_per_class]
+            c_dets = c_dets[keep, :]
+            allboxes.extend([_.tolist()+[j] for _ in c_dets])
+
+
+        allboxes = np.array(allboxes)
+        boxes = allboxes[:,:4]
+        scores = allboxes[:,4]
+        cls_inds = allboxes[:,5]
 
     loop_time = time.time() - loop_start
-    allboxes = np.array(allboxes)
-    boxes = allboxes[:,:4]
-    scores = allboxes[:,4]
-    cls_inds = allboxes[:,5]
     #debug
     # boxes = boxes[0:2]
     # scores = scores[0:2]
