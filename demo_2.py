@@ -172,10 +172,15 @@ while True:
 
         # debug
         print("len(selected scores):{}".format(len(inds)))
+        print("inds:{}".format(inds))
 
         if len(inds) == 0:
             continue
         c_bboxes = boxes[inds]
+
+        #debug
+        print("selected boxes:{}".format(c_bboxes))
+
         c_scores = scores[inds, j]
         c_dets = np.hstack((c_bboxes, c_scores[:, np.newaxis])).astype(np.float32, copy=False)
         soft_nms = cfg.test_cfg.soft_nms
