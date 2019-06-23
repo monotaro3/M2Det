@@ -145,8 +145,12 @@ while True:
             box[(1, 3), :] += offset_H
             #debug
             print("box")
+            print("shape:{}".format(box.shape))
+            print("len:{}".format(len(box)))
             print(box)
             print("score")
+            print("len:{}".format(len(score)))
+            print("shape:{}".format(score.shape))
             print(score)
             boxes.append(box)
             scores.append(score)
@@ -156,8 +160,12 @@ while True:
     # debug
     print("merged boxes")
     print(boxes)
+    print("shape:{}".format(boxes.shape))
+    print("len:{}".format(len(boxes)))
     print("merged scores")
     print(scores)
+    print("len:{}".format(len(scores)))
+    print("shape:{}".format(scores.shape))
 
     # if cfg.test_cfg.cuda:
     #     img = img.cuda()
