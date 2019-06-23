@@ -116,6 +116,8 @@ while True:
             break
     loop_start = time.time()
     W, H = image.shape[1], image.shape[0]
+    #debug
+    print("original image shape:{}".format(image.shape))
 
     if not args.split:
         img = _preprocess(image).unsqueeze(0)
@@ -130,8 +132,8 @@ while True:
         W_slot = math.ceil((W - margin) / stride)
 
         #debug
-        H_slot = 1
-        W_slot = 1
+        # H_slot = 1
+        # W_slot = 1
 
         #debug
         print('W,H:{}'.format((W,H)))
@@ -146,7 +148,7 @@ while True:
                 offset_W = stride * w if w < W_slot-1 else W - size
                 #debug
                 print("offset w, h :{}".format((offset_W,offset_H)))
-                cutout = image[offset_H:offset_H + size, offset_W:offset_W + size,:]
+                cutout = image[offset_H:offset_H + size, offset_W:offset_W + size,:].copy()
                 w_c, h_c = cutout.shape[1], cutout.shape[0]
                 # debug
                 print('W_c,H_c:{}'.format((w_c, h_c)))
