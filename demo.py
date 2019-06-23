@@ -132,11 +132,11 @@ while True:
         for w in range(W_slot):
             offset_W = stride * w if w < W_slot-1 else W - size
             cutout = image[offset_H:offset_H + size, offset_W:offset_W + size,:]
-            w, h = cutout.shape[1], cutout.shape[0]
+            w_c, h_c = cutout.shape[1], cutout.shape[0]
             cutout = _preprocess(image).unsqueeze(0)
             if cfg.test_cfg.cuda:
                 cutout = cutout.cuda()
-            scale = torch.Tensor([w, h, w, h])
+            scale = torch.Tensor([w_c, h_c, w_c, h_c])
             out = net(cutout)
             box, score = detector.forward(out, priors)
             box = (box[0] * scale).cpu().numpy()
