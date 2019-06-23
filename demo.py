@@ -89,8 +89,8 @@ if cam >= 0:
     capture = cv2.VideoCapture(cam)
 im_fnames = sorted((fname for fname in os.listdir(im_path) if os.path.splitext(fname)[-1] in ('.jpg','.png','.tif')))
 
-#debug
-im_fnames = [im_fnames[0]]
+# #debug
+# im_fnames = [im_fnames[0]]
 
 im_fnames = (os.path.join(im_path, fname) for fname in im_fnames)
 
@@ -135,6 +135,7 @@ while True:
         boxes =[]
         scores = []
 
+
         for h in range(H_slot):
             offset_H = stride * h if h < H_slot-1 else H - size
             for w in range(W_slot):
@@ -153,6 +154,7 @@ while True:
                 box, score = detector.forward(out, priors)
                 box = (box[0] * scale).cpu().numpy()
                 score = score[0].cpu().numpy()
+
                 box[:,(0, 2)] += offset_W
                 box[:,(1, 3)] += offset_H
                 #debug
