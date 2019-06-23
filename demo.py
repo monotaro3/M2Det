@@ -89,7 +89,7 @@ im_fnames = sorted((fname for fname in os.listdir(im_path) if os.path.splitext(f
 im_fnames = (os.path.join(im_path, fname) for fname in im_fnames)
 
 #debug
-im_fnames = im_fnames[[0]]
+im_fnames = [im_fnames[0]]
 
 im_iter = iter(im_fnames)
 filenum = 0
