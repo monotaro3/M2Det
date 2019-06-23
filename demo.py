@@ -89,8 +89,8 @@ if cam >= 0:
     capture = cv2.VideoCapture(cam)
 im_fnames = sorted((fname for fname in os.listdir(im_path) if os.path.splitext(fname)[-1] in ('.jpg','.png','.tif')))
 
-# #debug
-# im_fnames = [im_fnames[0]]
+#debug
+im_fnames = [im_fnames[0]]
 
 im_fnames = (os.path.join(im_path, fname) for fname in im_fnames)
 
