@@ -161,7 +161,7 @@ while True:
                 w_c, h_c = cutout.shape[1], cutout.shape[0]
                 # debug
                 print('W_c,H_c:{}'.format((w_c, h_c)))
-                cutout = _preprocess(image).unsqueeze(0)
+                cutout = _preprocess(cutout).unsqueeze(0)
                 if cfg.test_cfg.cuda:
                     cutout = cutout.cuda()
                 scale = torch.Tensor([w_c, h_c, w_c, h_c])
