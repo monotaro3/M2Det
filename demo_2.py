@@ -189,6 +189,8 @@ while True:
     scores = allboxes[:,4]
     cls_inds = allboxes[:,5]
 
+    print("final score num:{}".format(len(scores)))
+
     loop_time = time.time() - loop_start
 
     print('\n'.join(['pos:{}, ids:{}, score:{:.3f}'.format('(%.1f,%.1f,%.1f,%.1f)' % (o[0],o[1],o[2],o[3]) \
