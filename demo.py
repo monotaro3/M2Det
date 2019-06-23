@@ -129,6 +129,9 @@ while True:
         H_slot = math.ceil((H - margin) / stride)
         W_slot = math.ceil((W - margin) / stride)
 
+        #debug
+        print('W,H:{}'.format((W,H)))
+
         boxes =[]
         scores = []
 
@@ -140,6 +143,8 @@ while True:
                 print("offset w, h :{}".format((offset_W,offset_H)))
                 cutout = image[offset_H:offset_H + size, offset_W:offset_W + size,:]
                 w_c, h_c = cutout.shape[1], cutout.shape[0]
+                # debug
+                print('W_c,H_c:{}'.format((w_c, h_c)))
                 cutout = _preprocess(image).unsqueeze(0)
                 if cfg.test_cfg.cuda:
                     cutout = cutout.cuda()
