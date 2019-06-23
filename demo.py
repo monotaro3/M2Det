@@ -130,6 +130,10 @@ while True:
         W_slot = math.ceil((W - margin) / stride)
 
         #debug
+        H_slot = 1
+        W_slot = 1
+
+        #debug
         print('W,H:{}'.format((W,H)))
 
         boxes =[]
