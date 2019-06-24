@@ -225,6 +225,6 @@ while True:
     if cam < 0:
         # cv2.imwrite('{}_m2det.jpg'.format(fname.split('.')[0]), im2show)
         cv2.imwrite(os.path.join(args.result,'{}_m2det.jpg'.format(os.path.splitext(os.path.split(fname)[1])[0])), im2show)
-        with open(os.path.join(args.result,'{}_det_result.pkl'.format(os.path.splitext(os.path.split(fname)[1])[0])),'w') as r:
+        with open(os.path.join(args.result,'{}_det_result.pkl'.format(os.path.splitext(os.path.split(fname)[1])[0])),'wb') as r:
             pickle.dump([boxes,scores,cls_inds], r)
 
