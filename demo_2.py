@@ -13,6 +13,7 @@ from data import BaseTransform
 from utils.core import *
 from utils.pycocotools.coco import COCO
 import matplotlib.pyplot as plt
+import pickle
 
 parser = argparse.ArgumentParser(description='M2Det Testing')
 parser.add_argument('-c', '--config', default='configs/m2det320_vgg.py', type=str)
@@ -165,14 +166,14 @@ while True:
     allboxes = []
     for j in range(1, cfg.model.m2det_config.num_classes):
         #debug
-        print("len(scores):{}".format(len(scores)))
-        print("score threshold:{}".format(cfg.test_cfg.score_threshold))
+        # print("len(scores):{}".format(len(scores)))
+        # print("score threshold:{}".format(cfg.test_cfg.score_threshold))
 
         inds = np.where(scores[:,j] > cfg.test_cfg.score_threshold)[0]
 
         # debug
-        print("len(selected scores):{}".format(len(inds)))
-        print("inds:{}".format(inds))
+        # print("len(selected scores):{}".format(len(inds)))
+        # print("inds:{}".format(inds))
 
         if len(inds) == 0:
             continue
@@ -180,9 +181,9 @@ while True:
         c_scores = scores[inds, j]
 
         #debug
-        print("selected scores:{}")
-        for s in c_scores:
-            print(s)
+        # print("selected scores:{}")
+        # for s in c_scores:
+        #     print(s)
 
         c_dets = np.hstack((c_bboxes, c_scores[:, np.newaxis])).astype(np.float32, copy=False)
         soft_nms = cfg.test_cfg.soft_nms
@@ -224,3 +225,6 @@ while True:
     if cam < 0:
         # cv2.imwrite('{}_m2det.jpg'.format(fname.split('.')[0]), im2show)
         cv2.imwrite(os.path.join(args.result,'{}_m2det.jpg'.format(os.path.splitext(os.path.split(fname)[1])[0])), im2show)
+        with open(os.path.join(args.result,'{}_det_result.pkl'.format(os.path.splitext(os.path.split(fname)[1])[0])),'w') as r:
+            pickle.dump([boxes,scores,cls_inds], r)
+
