@@ -230,7 +230,8 @@ class COCODetection(data.Dataset):
         print('{:.1f}'.format(100 * ap_default))
         print("<scores of IoU {}>".format(IoU_lo_thresh))
         print("AP: {} F1: {} mean: {} PR: {} RR: {} FAR: {}".format(ap_lo_IoU,F1_lo_IoU,mean_ap_f1_lo_IoU,precision_lo_IoU,recall_lo_IoU, far_lo_IoU))
-
+        #debug
+        print("precision:{}".format(precisions_lo_IoU))
         aps = list()
         for cls_ind, cls in enumerate(self._classes):
             if cls == '__background__':
