@@ -80,6 +80,7 @@ class COCOeval:
         if not cocoGt is None:
             self.params.imgIds = sorted(cocoGt.getImgIds())
             self.params.catIds = sorted(cocoGt.getCatIds())
+        self.lo_IoU = 0.5
 
 
     def _prepare(self):
@@ -498,7 +499,7 @@ class Params:
         self.imgIds = []
         self.catIds = []
         # np.arange causes trouble.  the data point on arange is slightly larger than the true value
-        self.iouThrs = np.linspace(.5, 0.95, np.round((0.95 - .5) / .05) + 1, endpoint=True)
+        self.iouThrs = np.linspace(self.lo_IoU, 0.95, np.round((0.95 - .5) / .05) + 1, endpoint=True)
         self.recThrs = np.linspace(.0, 1.00, np.round((1.00 - .0) / .01) + 1, endpoint=True)
         self.maxDets = [1, 10, 100]
         self.areaRng = [[0 ** 2, 1e5 ** 2], [0 ** 2, 32 ** 2], [32 ** 2, 96 ** 2], [96 ** 2, 1e5 ** 2]]
@@ -516,7 +517,7 @@ class Params:
         self.areaRngLbl = ['all', 'medium', 'large']
         self.useCats = 1
 
-    def __init__(self, iouType='segm'):
+    def __init__(self, iouType='segm',lo_IOU = 0.5):
         if iouType == 'segm' or iouType == 'bbox':
             self.setDetParams()
         elif iouType == 'keypoints':
@@ -526,3 +527,4 @@ class Params:
         self.iouType = iouType
         # useSegm is deprecated
         self.useSegm = None
+        self.lo_IoU = lo_IOU

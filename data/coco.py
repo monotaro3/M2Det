@@ -42,6 +42,7 @@ class COCODetection(data.Dataset):
             'valminusminival2014' : 'val2014',  # val2014 \setminus minival2014
             'test-dev2015' : 'test2015',
         }
+        self.eval_IoU_low = 0.5
 
         for (year, image_set) in image_sets:
             coco_name = image_set+year
@@ -199,7 +200,7 @@ class COCODetection(data.Dataset):
         return torch.Tensor(self.pull_image(index)).unsqueeze_(0)
 
     def _print_detection_eval_metrics(self, coco_eval):
-        IoU_lo_thresh = 0.5
+        IoU_lo_thresh = self.eval_IoU_low
         IoU_hi_thresh = 0.95
         def _get_thr_ind(coco_eval, thr):
             ind = np.where((coco_eval.params.iouThrs > thr - 1e-5) &
@@ -216,9 +217,20 @@ class COCODetection(data.Dataset):
         precision = \
             coco_eval.eval['precision'][ind_lo:(ind_hi + 1), :, :, 0, 2]
         ap_default = np.mean(precision[precision > -1])
+        precisions_lo_IoU = coco_eval.eval['precision'][ind_lo, :, :, 0, 2]  #maxdet:100
+        precision_lo_IoU = np.mean(precisions_lo_IoU[-1,:][precisions_lo_IoU[-1,:]>-1])
+        recalls_lo_IoU = coco_eval.eval['recall'][ind_lo, :, 0, 2]
+        recall_lo_IoU = np.mean(recalls_lo_IoU[recalls_lo_IoU > -1])
+        far_lo_IoU = (1/precision_lo_IoU -1) * recall_lo_IoU
+        F1_lo_IoU = 2*precision_lo_IoU*recall_lo_IoU/(precision_lo_IoU+recall_lo_IoU)
+        ap_lo_IoU = np.mean(precisions_lo_IoU[precisions_lo_IoU > -1])
+        mean_ap_f1_lo_IoU = (ap_lo_IoU + F1_lo_IoU)/2
         print('~~~~ Mean and per-category AP @ IoU=[{:.2f},{:.2f}] '
                '~~~~'.format(IoU_lo_thresh, IoU_hi_thresh))
         print('{:.1f}'.format(100 * ap_default))
+        print("<scores of IoU {}>".format(IoU_lo_thresh))
+        print("AP: {} F1: {} mean: {} PR: {} RR: {} FAR: {}".format(ap_lo_IoU,F1_lo_IoU,mean_ap_f1_lo_IoU,precision_lo_IoU,recall_lo_IoU, far_lo_IoU))
+
         aps = list()
         for cls_ind, cls in enumerate(self._classes):
             if cls == '__background__':
@@ -236,6 +248,7 @@ class COCODetection(data.Dataset):
         ann_type = 'bbox'
         coco_dt = self._COCO.loadRes(res_file)
         coco_eval = COCOeval(self._COCO, coco_dt)
+        coco_eval.params.lo_IoU = self.eval_IoU_low
         coco_eval.params.useSegm = (ann_type == 'segm')
         coco_eval.evaluate()
         coco_eval.accumulate()
