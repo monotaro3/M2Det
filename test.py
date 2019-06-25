@@ -20,6 +20,7 @@ parser.add_argument('-c', '--config', default='configs/m2det320_vgg.py', type=st
 parser.add_argument('-d', '--dataset', default='COCO', help='VOC or COCO version')
 parser.add_argument('-m', '--trained_model', default=None, type=str, help='Trained state_dict file path to open')
 parser.add_argument('--test', action='store_true', help='to submit a test file')
+parser.add_argument('--eval_IoU', type=float,default=0.5, help='lowest IoU threshold for evaluation')
 args = parser.parse_args()
 
 print_info('----------------------------------------------------------------------\n'
@@ -82,6 +83,7 @@ if __name__ == '__main__':
     net.eval()
     _set = 'eval_sets' if not args.test else 'test_sets'
     testset = get_dataloader(cfg, args.dataset, _set)
+    testset.eval_IoU_low = args.eval_IoU
     if cfg.test_cfg.cuda:
         net = net.cuda()
         cudnn.benchmark = True
