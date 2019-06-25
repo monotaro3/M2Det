@@ -247,8 +247,8 @@ class COCODetection(data.Dataset):
     def _do_detection_eval(self, res_file, output_dir):
         ann_type = 'bbox'
         coco_dt = self._COCO.loadRes(res_file)
-        coco_eval = COCOeval(self._COCO, coco_dt)
-        coco_eval.params.lo_IoU = self.eval_IoU_low
+        coco_eval = COCOeval(self._COCO, coco_dt,lo_IoU=self.eval_IoU_low)
+        # coco_eval.params.lo_IoU = self.eval_IoU_low
         coco_eval.params.useSegm = (ann_type == 'segm')
         coco_eval.evaluate()
         coco_eval.accumulate()
