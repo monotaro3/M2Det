@@ -156,11 +156,21 @@ def nms_process(num_classes, i, scores, boxes, cfg, min_thresh, all_boxes, max_p
             continue
         c_bboxes = boxes[inds]
         c_scores = scores[inds, j]
+        #debug
+        print("c_bboxes shape:{}".format(c_bboxes.shape))
+        print("c_scores shape:{}".format(c_scores.shape))
+
         c_dets = np.hstack((c_bboxes, c_scores[:, np.newaxis])).astype(np.float32, copy=False)
+
+        #debug
+        print("c_dets shape:{}".format(c_dets.shape))
 
         soft_nms = cfg.test_cfg.soft_nms
         keep = nms(c_dets, cfg.test_cfg.iou, force_cpu=soft_nms)
         keep = keep[:cfg.test_cfg.keep_per_class] # keep only the highest boxes
+        #debug
+        print("keep :{}".format(keep))
+
         c_dets = c_dets[keep, :]
         all_boxes[j][i] = c_dets
     if max_per_image > 0:
