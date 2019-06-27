@@ -44,7 +44,7 @@ test_cfg = dict(
     topk = 0,
     iou = 0.45,
     soft_nms = True,
-    score_threshold = 0.6,
+    score_threshold = 0.1,
     keep_per_class = 10000,
     save_folder = 'eval'
     )
