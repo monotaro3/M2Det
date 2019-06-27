@@ -218,8 +218,11 @@ class COCODetection(data.Dataset):
             coco_eval.eval['precision'][ind_lo:(ind_hi + 1), :, :, 0, 2]
         ap_default = np.mean(precision[precision > -1])
         precisions_lo_IoU = coco_eval.eval['precision'][ind_lo, :, :, 0, 2]  #maxdet:100
-        # precision_lo_IoU = np.mean(precisions_lo_IoU[-1,:][precisions_lo_IoU[-1,:]>0])
-        precision_lo_IoU = np.mean(np.amin(precisions_lo_IoU,axis=0)[np.amin(precisions_lo_IoU,axis=0) > -1])
+        precisions_min_idx = np.sum(precisions_lo_IoU > 0,axis=0) - 1
+        precisions_min_ = precisions_lo_IoU[(precisions_min_idx,np.arange(len(precisions_min_idx)))]
+        precisions_min = precisions_min_[precisions_min_ > 0]
+        # precision_lo_IoU = np.mean(np.amin(precisions_lo_IoU,axis=0)[np.amin(precisions_lo_IoU,axis=0) > -1])
+        precision_lo_IoU = np.mean(precisions_min)
         recalls_lo_IoU = coco_eval.eval['recall'][ind_lo, :, 0, 2]
         recall_lo_IoU = np.mean(recalls_lo_IoU[recalls_lo_IoU > -1])
         far_lo_IoU = (1/precision_lo_IoU -1) * recall_lo_IoU
