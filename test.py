@@ -21,6 +21,7 @@ parser.add_argument('-d', '--dataset', default='COCO', help='VOC or COCO version
 parser.add_argument('-m', '--trained_model', default=None, type=str, help='Trained state_dict file path to open')
 parser.add_argument('--test', action='store_true', help='to submit a test file')
 parser.add_argument('--eval_IoU', type=float,default=0.5, help='lowest IoU threshold for evaluation')
+parser.add_argument('--low_threshold', type=float)
 args = parser.parse_args()
 
 print_info('----------------------------------------------------------------------\n'
@@ -59,11 +60,13 @@ def test_net(save_folder, net, detector, cuda, testset, transform, max_per_image
         detect_time = _t['im_detect'].toc()
         # step2: Post-process: NMS
         _t['misc'].tic()
-        nms_process(num_classes, i, scores, boxes, cfg, thresh, all_boxes, max_per_image)
+        nms_process(num_classes, i, scores, boxes, cfg, thresh, all_boxes, max_per_image,args.low_threshold)
         nms_time = _t['misc'].toc()
 
         tot_detect_time += detect_time if i > 0 else 0
         tot_nms_time += nms_time if i > 0 else 0
+
+
 
     with open(det_file, 'wb') as f:
         pickle.dump(all_boxes, f, pickle.HIGHEST_PROTOCOL)

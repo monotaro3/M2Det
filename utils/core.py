@@ -148,7 +148,7 @@ def image_forward(img, net, cuda, priors, detector, transform):
     scores = scores[0].cpu().numpy()
     return boxes, scores
    
-def nms_process(num_classes, i, scores, boxes, cfg, min_thresh, all_boxes, max_per_image):
+def nms_process(num_classes, i, scores, boxes, cfg, min_thresh, all_boxes, max_per_image,low_threshold=None):
     for j in range(1, num_classes): # ignore the bg(category_id=0)
         inds = np.where(scores[:,j] > min_thresh)[0]
         if len(inds) == 0:
@@ -157,21 +157,22 @@ def nms_process(num_classes, i, scores, boxes, cfg, min_thresh, all_boxes, max_p
         c_bboxes = boxes[inds]
         c_scores = scores[inds, j]
         #debug
-        print("c_bboxes shape:{}".format(c_bboxes.shape))
-        print("c_scores shape:{}".format(c_scores.shape))
+        # print("c_bboxes shape:{}".format(c_bboxes.shape))
+        # print("c_scores shape:{}".format(c_scores.shape))
 
         c_dets = np.hstack((c_bboxes, c_scores[:, np.newaxis])).astype(np.float32, copy=False)
 
         #debug
-        print("c_dets shape:{}".format(c_dets.shape))
+        # print("c_dets shape:{}".format(c_dets.shape))
 
         soft_nms = cfg.test_cfg.soft_nms
         keep = nms(c_dets, cfg.test_cfg.iou, force_cpu=soft_nms)
         keep = keep[:cfg.test_cfg.keep_per_class] # keep only the highest boxes
         #debug
-        print("keep :{}".format(keep))
-
+        # print("keep :{}".format(keep))
         c_dets = c_dets[keep, :]
+        if low_threshold:
+            c_dets = c_dets[c_dets[:,4] > low_threshold]
         all_boxes[j][i] = c_dets
     if max_per_image > 0:
         image_scores = np.hstack([all_boxes[j][i][:, -1] for j in range(1, num_classes)])
