@@ -188,13 +188,15 @@ while True:
 
         c_dets = np.hstack((c_bboxes, c_scores[:, np.newaxis])).astype(np.float32, copy=False)
         soft_nms = cfg.test_cfg.soft_nms
-        if not args.no_nms:
-            keep = nms(c_dets, cfg.test_cfg.iou, force_cpu = soft_nms) #min_thresh, device_id=0 if cfg.test_cfg.cuda else None)
-        else:
-            keep = np.argsort(c_scores)[::-1]
-        #debug
-        print("keep:{}".format(keep))
+        # if not args.no_nms:
+        #     keep = nms(c_dets, cfg.test_cfg.iou, force_cpu = soft_nms) #min_thresh, device_id=0 if cfg.test_cfg.cuda else None)
+        # else:
+        #     keep = np.argsort(c_scores)[::-1]
+        # #debug
+        # print("keep:{}".format(keep))
 
+        keep = nms(c_dets, cfg.test_cfg.iou,
+                   force_cpu=soft_nms)  # min_thresh, device_id=0 if cfg.test_cfg.cuda else None)
         keep = keep[:cfg.test_cfg.keep_per_class]
         c_dets = c_dets[keep, :]
         allboxes.extend([_.tolist()+[j] for _ in c_dets])
