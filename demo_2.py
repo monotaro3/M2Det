@@ -24,6 +24,7 @@ parser.add_argument('--cam', default=-1, type=int, help='camera device id')
 parser.add_argument('--show', action='store_true', help='Whether to display the images')
 parser.add_argument('--split', action='store_true', help='whether to split the images for test')
 parser.add_argument('--no_nms', action='store_true', help='omit nms process')
+parser.add_argument('--no_result_img', action='store_true', help='omit output images')
 
 args = parser.parse_args()
 
@@ -238,7 +239,8 @@ while True:
         plt.imshow(im2show)
     if cam < 0:
         # cv2.imwrite('{}_m2det.jpg'.format(fname.split('.')[0]), im2show)
-        cv2.imwrite(os.path.join(args.result,'{}_m2det.jpg'.format(os.path.splitext(os.path.split(fname)[1])[0])), im2show)
+        if not args.no_result_img:
+            cv2.imwrite(os.path.join(args.result,'{}_m2det.jpg'.format(os.path.splitext(os.path.split(fname)[1])[0])), im2show)
         with open(os.path.join(args.result,'{}_det_result.pkl'.format(os.path.splitext(os.path.split(fname)[1])[0])),'wb') as r:
             pickle.dump([boxes,scores,cls_inds], r)
 
