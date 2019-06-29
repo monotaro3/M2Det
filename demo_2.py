@@ -23,6 +23,7 @@ parser.add_argument('-m', '--trained_model', default=None, type=str, help='Train
 parser.add_argument('--cam', default=-1, type=int, help='camera device id')
 parser.add_argument('--show', action='store_true', help='Whether to display the images')
 parser.add_argument('--split', action='store_true', help='whether to split the images for test')
+parser.add_argument('--no_nms', action='store_true', help='omit nms process')
 
 args = parser.parse_args()
 
@@ -187,7 +188,10 @@ while True:
 
         c_dets = np.hstack((c_bboxes, c_scores[:, np.newaxis])).astype(np.float32, copy=False)
         soft_nms = cfg.test_cfg.soft_nms
-        keep = nms(c_dets, cfg.test_cfg.iou, force_cpu = soft_nms) #min_thresh, device_id=0 if cfg.test_cfg.cuda else None)
+        if not args.no_nms:
+            keep = nms(c_dets, cfg.test_cfg.iou, force_cpu = soft_nms) #min_thresh, device_id=0 if cfg.test_cfg.cuda else None)
+        else:
+            keep = np.argsort(c_scores)[::-1]
         keep = keep[:cfg.test_cfg.keep_per_class]
         c_dets = c_dets[keep, :]
         allboxes.extend([_.tolist()+[j] for _ in c_dets])
