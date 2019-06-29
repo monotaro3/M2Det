@@ -213,7 +213,7 @@ while True:
     scores = allboxes[:,4]
     cls_inds = allboxes[:,5]
 
-    print("final score num:{}".format(len(scores)))
+    # print("final score num:{}".format(len(scores)))
 
     loop_time = time.time() - loop_start
 
