@@ -192,11 +192,17 @@ while True:
             keep = nms(c_dets, cfg.test_cfg.iou, force_cpu = soft_nms) #min_thresh, device_id=0 if cfg.test_cfg.cuda else None)
         else:
             keep = np.argsort(c_scores)[::-1]
+        #debug
+        print("keep:{}".format(keep))
+
         keep = keep[:cfg.test_cfg.keep_per_class]
         c_dets = c_dets[keep, :]
         allboxes.extend([_.tolist()+[j] for _ in c_dets])
 
     allboxes = np.array(allboxes)
+    # debug
+    print("allbox shape:{}".format(allboxes.shape))
+
     boxes = allboxes[:,:4]
     scores = allboxes[:,4]
     cls_inds = allboxes[:,5]
